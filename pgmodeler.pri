@@ -1,36 +1,86 @@
 # This file contains the main variables settings to build pgModeler on all supported platforms.
-#
-# Thanks to Lisandro Damián Nicanor Pérez Meyer, pgModeler is able to be package in most of
-# Linux distros.
-#
-# Original version by: Lisandro Damián Nicanor Pérez Meyer <perezmeyer@gmail.com>
-# Original code: https://github.com/perezmeyer/pgmodeler/tree/shared_libs
-#
-# Refactored version by: Raphal Araújo e Silva <raphael@pgmodeler.com.br>
-# Refactored code: https://github.com/pgmodeler/pgmodeler
 
 # General Qt settings
 QT += core widgets printsupport network svg
-CONFIG += ordered qt stl rtti exceptions warn_on c++11
+CONFIG += ordered qt stl rtti exceptions warn_on c++17
 TEMPLATE = subdirs
 MOC_DIR = moc
 OBJECTS_DIR = obj
 UI_DIR = src
 
-# Setting up the flag passed to compiler to build the demo version
-defined(DEMO_VERSION, var): DEFINES+=DEMO_VERSION
+# Disables all the APIs deprecated before Qt 6.0.0
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
+!defined(NO_CHECK_CURR_VER, var):DEFINES+=CHECK_CURR_VER
 
-# Setting up the flag passed to compiler to disable all code related to update checking
+# Store the absolute paths to library subprojects to be referenced in other .pro files
+# *_ROOT -> the path to the root folder of the subproject
+# *_LIB -> the libary flags (-L -l) (LIBS on qmake) passed to the compiler that points to the library generated from a subproject
+# *_INC -> the path to the source code folder (src), used by the flag -I (INCLUDEPATH on qmake) passed to the compiler
+LIBCANVAS = libcanvas
+LIBCANVAS_ROOT = $$absolute_path($$PWD/libs/$$LIBCANVAS)
+LIBCANVAS_LIB = -L$$LIBCANVAS_ROOT -lcanvas
+LIBCANVAS_INC = $$LIBCANVAS_ROOT/src
+
+LIBCONNECTOR = libconnector
+LIBCONNECTOR_ROOT = $$absolute_path($$PWD/libs/$$LIBCONNECTOR)
+LIBCONNECTOR_LIB = -L$$LIBCONNECTOR_ROOT -lconnector
+LIBCONNECTOR_INC = $$LIBCONNECTOR_ROOT/src
+
+LIBCORE = libcore
+LIBCORE_ROOT = $$absolute_path($$PWD/libs/$$LIBCORE)
+LIBCORE_LIB = -L$$LIBCORE_ROOT -lcore
+LIBCORE_INC = $$LIBCORE_ROOT/src
+
+LIBPARSERS = libparsers
+LIBPARSERS_ROOT = $$absolute_path($$PWD/libs/$$LIBPARSERS)
+LIBPARSERS_LIB = -L$$LIBPARSERS_ROOT -lparsers
+LIBPARSERS_INC = $$LIBPARSERS_ROOT/src
+
+LIBGUI = libgui
+LIBGUI_ROOT = $$absolute_path($$PWD/libs/$$LIBGUI)
+LIBGUI_LIB = -L$$LIBGUI_ROOT -lgui
+LIBGUI_INC = $$LIBGUI_ROOT/src
+
+LIBUTILS = libutils
+LIBUTILS_ROOT = $$absolute_path($$PWD/libs/$$LIBUTILS)
+LIBUTILS_LIB = -L$$LIBUTILS_ROOT -lutils
+LIBUTILS_INC = $$LIBUTILS_ROOT/src
+
+# Set the flag passed to compiler to indicate a snapshot build
+defined(SNAPSHOT_BUILD, var): DEFINES+=SNAPSHOT_BUILD
+
+# Set the flag passed to compiler to build the demo version
+defined(DEMO_VERSION, var) {
+ DEFINES+=DEMO_VERSION
+ unset(PRIVATE_PLUGINS)
+}
+
+# Set up the flag passed to compiler to disable all code related to update checking
 defined(NO_UPDATE_CHECK, var): DEFINES+=NO_UPDATE_CHECK
 
-# Properly defining build number constant
-unix {
- BUILDNUM=$$system("date '+%Y%m%d'")
- DEFINES+=BUILDNUM=\\\"$${BUILDNUM}\\\"
-} else {
- BUILDNUM=$$system('wingetdate.bat')
- DEFINES+=BUILDNUM=\\\"$${BUILDNUM}\\\"
+# Set up the plugin folder to be used
+PLUGINS_FOLDER=plugins
+defined(PRIVATE_PLUGINS, var) {
+  DEFINES+=PRIVATE_PLUGINS_SYMBOLS
+  PLUGINS_FOLDER=priv-plugins
 }
+
+# Include the plugins subprojects only if exists
+PLUGINS_SRC_ROOT=$$PWD/$$PLUGINS_FOLDER
+PLUGINS_PRO_FILE=$$PLUGINS_SRC_ROOT/$${PLUGINS_FOLDER}.pro
+INCLUDEPATH+=$$PLUGINS_SRC_ROOT/src
+
+# Properly defining build number/date constant
+unix {
+ BUILDNUM=$$system("$$PWD/getbuildnum.sh")
+ BUILDDATE=$$system("date '+%Y%m%d'")
+} else {
+ BUILDNUM=$$system("$$PWD/getbuildnum.bat")
+ BUILDDATE=$$system("$$PWD/getbuildnum.bat")
+}
+
+DEFINES+=BUILDNUM=\\\"$${BUILDNUM}\\\"
+DEFINES+=BUILDDATE=\\\"$${BUILDDATE}\\\"
 
 # Below, the user can specify where all generated file can be placed
 # through a set of variables, being them:
@@ -54,22 +104,40 @@ unix {
 linux {
   CONFIG += x11
 
-  # Default configuration for package pgModeler.
-  # The default prefix is /usr/local
-  !defined(PREFIX, var):        PREFIX = /usr/local
-  !defined(BINDIR, var):        BINDIR = $$PREFIX/bin
-  !defined(PRIVATEBINDIR, var): PRIVATEBINDIR = $$PREFIX/lib/pgmodeler/bin
-  !defined(PRIVATELIBDIR, var): PRIVATELIBDIR = $$PREFIX/lib/pgmodeler
-  !defined(PLUGINSDIR, var):    PLUGINSDIR = $$PREFIX/lib/pgmodeler/plugins
-  !defined(SHAREDIR, var):      SHAREDIR = $$PREFIX/share/pgmodeler
-  !defined(CONFDIR, var):       CONFDIR = $$SHAREDIR/conf
-  !defined(DOCDIR, var):        DOCDIR = $$SHAREDIR
-  !defined(LANGDIR, var):       LANGDIR = $$SHAREDIR/lang
-  !defined(SAMPLESDIR, var):    SAMPLESDIR = $$SHAREDIR/samples
-  !defined(SCHEMASDIR, var):    SCHEMASDIR = $$SHAREDIR/schemas
+  # If the AppImage generation option is set
+  defined(APPIMAGE_BUILD, var):{
+	!defined(PREFIX, var): PREFIX = /usr/local/pgmodeler-appimage
+	BINDIR = $$PREFIX
+	PRIVATEBINDIR = $$PREFIX
+	PRIVATELIBDIR = $$PREFIX/lib
+	PLUGINSDIR = $$PREFIX/lib/pgmodeler/plugins
+	SHAREDIR = $$PREFIX
+	CONFDIR = $$SHAREDIR/conf
+	DOCDIR = $$SHAREDIR
+	LANGDIR = $$SHAREDIR/lang
+	SAMPLESDIR = $$SHAREDIR/samples
+	SCHEMASDIR = $$SHAREDIR/schemas
+  }
+
+  !defined(APPIMAGE_BUILD, var):{
+	# Default configuration for package pgModeler.
+	# The default prefix is /usr/local
+	!defined(PREFIX, var):        PREFIX = /usr/local
+	!defined(BINDIR, var):        BINDIR = $$PREFIX/bin
+	!defined(PRIVATEBINDIR, var): PRIVATEBINDIR = $$PREFIX/bin
+	!defined(PRIVATELIBDIR, var): PRIVATELIBDIR = $$PREFIX/lib/pgmodeler
+	!defined(PLUGINSDIR, var):    PLUGINSDIR = $$PREFIX/lib/pgmodeler/plugins
+	!defined(SHAREDIR, var):      SHAREDIR = $$PREFIX/share/pgmodeler
+	!defined(CONFDIR, var):       CONFDIR = $$SHAREDIR/conf
+	!defined(DOCDIR, var):        DOCDIR = $$SHAREDIR
+	!defined(LANGDIR, var):       LANGDIR = $$SHAREDIR/lang
+	!defined(SAMPLESDIR, var):    SAMPLESDIR = $$SHAREDIR/samples
+	!defined(SCHEMASDIR, var):    SCHEMASDIR = $$SHAREDIR/schemas
+ }
 
   # Specifies where to find the libraries at runtime
-  QMAKE_RPATHDIR += $$PRIVATELIBDIR
+  RELATIVE_PRIVATELIBDIR = $$relative_path($$PRIVATELIBDIR, $$BINDIR)
+  QMAKE_LFLAGS += "-Wl,-rpath,\'\$$ORIGIN\' -Wl,-rpath,\'\$$ORIGIN/$$RELATIVE_PRIVATELIBDIR\'"
 
   # Forcing the display of some warnings
   CONFIG(debug, debug|release): QMAKE_CXXFLAGS += "-Wall -Wextra -Wuninitialized"
@@ -100,7 +168,7 @@ macx {
   CONFIG -= app_bundle
 
   # The default prefix is ./build/pgmodeler.app/Contents
-  !defined(PREFIX, var):        PREFIX = /Applications/pgmodeler.app/Contents
+  !defined(PREFIX, var):        PREFIX = /Applications/pgModeler.app/Contents
   !defined(BINDIR, var):        BINDIR = $$PREFIX/MacOS
   !defined(PRIVATEBINDIR, var): PRIVATEBINDIR = $$BINDIR
   !defined(PRIVATELIBDIR, var): PRIVATELIBDIR = $$PREFIX/Frameworks
@@ -126,7 +194,7 @@ DEFINES += BINDIR=\\\"$${BINDIR}\\\" \
            DOCDIR=\\\"$${DOCDIR}\\\" \
            LANGDIR=\\\"$${LANGDIR}\\\" \
            SAMPLESDIR=\\\"$${SAMPLESDIR}\\\" \
-           SCHEMASDIR=\\\"$${SCHEMASDIR}\\\"
+		   SCHEMASDIR=\\\"$${SCHEMASDIR}\\\"
 
 
 # pgModeler depends on libpq and libxml2 this way to variables
@@ -138,34 +206,42 @@ DEFINES += BINDIR=\\\"$${BINDIR}\\\" \
 # XML_LIB   -> Full path to libxml2.(so | dll | dylib)
 # XML_INC   -> Root path where XML2 includes can be found
 
-unix:!macx {
-  CONFIG += link_pkgconfig
-  PKGCONFIG = libpq libxml-2.0
-  PGSQL_LIB = -lpq
-  XML_LIB = -lxml2
+linux: {
+  # If all custom variables PGSQL_??? and XML_??? are defined
+  # Then we use them instead of discovering the paths via pkg-config
+  dep_paths = "$$PGSQL_LIB" "$$XML_LIB" "$$PGSQL_INC" "$$XML_INC"
+  if(count(dep_paths, 4)):{
+    INCLUDEPATH += "$$PGSQL_INC" "$$XML_INC"
+	has_dep_paths = true
+  }
+
+  # If not all of the PGSQL_??? and XML_??? vars are defined
+  # Then we default to use pkg-config for libpq and libxml-2.0
+  !defined(has_dep_paths,var): {
+    CONFIG += link_pkgconfig
+	PKGCONFIG = libpq libxml-2.0
+	PGSQL_LIB = -lpq
+	XML_LIB = -lxml2
+  }
 }
 
 macx {
-  PGSQL_LIB = /Library/PostgreSQL/10/lib/libpq.dylib
-  PGSQL_INC = /Library/PostgreSQL/10/include
-  XML_INC = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/libxml2
-  XML_LIB = /usr/lib/libxml2.dylib
-  INCLUDEPATH += $$PGSQL_INC $$XML_INC
-}
-
-windows {
-  !defined(PGSQL_LIB, var): PGSQL_LIB = C:/PostgreSQL/10.1/lib/libpq.dll
-  !defined(PGSQL_INC, var): PGSQL_INC = C:/PostgreSQL/10.1/include
-  !defined(XML_INC, var): XML_INC = C:/PostgreSQL/10.1/include
-  !defined(XML_LIB, var): XML_LIB = C:/PostgreSQL/10.1/bin/libxml2.dll
-
-  # Workaround to solve bug of timespec struct on MingW + PostgreSQL < 9.4
-  QMAKE_CXXFLAGS+="-DHAVE_STRUCT_TIMESPEC"
-
+  !defined(PGSQL_LIB, var): PGSQL_LIB = /Library/PostgreSQL/14/lib/libpq.dylib
+  !defined(PGSQL_INC, var): PGSQL_INC = /Library/PostgreSQL/14/include
+  !defined(XML_INC, var): XML_INC = /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/libxml2
+  !defined(XML_LIB, var): XML_LIB = /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/libxml2.tbd
   INCLUDEPATH += "$$PGSQL_INC" "$$XML_INC"
 }
 
-macx | windows {
+windows {
+  !defined(PGSQL_LIB, var): PGSQL_LIB = C:/msys64/mingw64/bin/libpq.dll
+  !defined(PGSQL_INC, var): PGSQL_INC = C:/msys64/mingw64/include
+  !defined(XML_INC, var): XML_INC = C:/msys64/mingw64/include/libxml2
+  !defined(XML_LIB, var): XML_LIB = C:/msys64/mingw64/bin/libxml2-2.dll
+  INCLUDEPATH += "$$PGSQL_INC" "$$XML_INC"
+}
+
+linux:defined(has_dep_paths,var) | macx | windows : {
   !exists($$PGSQL_LIB) {
     PKG_ERROR = "PostgreSQL libraries"
     VARIABLE = "PGSQL_LIB"

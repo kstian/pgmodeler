@@ -1,7 +1,7 @@
 /*
 # PostgreSQL Database Modeler (pgModeler)
 #
-# Copyright 2006-2018 - Raphael Araújo e Silva <raphael@pgmodeler.io>
+# Copyright 2006-2023 - Raphael Araújo e Silva <raphael@pgmodeler.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,28 +17,32 @@
 */
 
 #include <QtTest/QtTest>
-#include "syntaxhighlighter.h"
+#include "utils/syntaxhighlighter.h"
+#include "pgmodelerunittest.h"
 
-class SyntaxHighlighterTest: public QObject {
-  private:
-    Q_OBJECT
+class SyntaxHighlighterTest: public QObject, public PgModelerUnitTest {
+	private:
+		Q_OBJECT
 
-  private slots:
-    void handleMultiLineComment(void);
+	public:
+		SyntaxHighlighterTest() : PgModelerUnitTest(SCHEMASDIR) {}
+
+	private slots:
+		void handleMultiLineComment();
 };
 
-void SyntaxHighlighterTest::handleMultiLineComment(void)
+void SyntaxHighlighterTest::handleMultiLineComment()
 {
-  QDialog *dlg=new QDialog;
-  QPlainTextEdit *edt=new QPlainTextEdit(dlg);
-  QHBoxLayout *layout=new QHBoxLayout(dlg);
-  SyntaxHighlighter *sql_hl=nullptr;
+	QDialog *dlg=new QDialog;
+	QPlainTextEdit *edt=new QPlainTextEdit(dlg);
+	QHBoxLayout *layout=new QHBoxLayout(dlg);
+	SyntaxHighlighter *sql_hl=nullptr;
 
-  sql_hl=new SyntaxHighlighter(edt, false);
-  sql_hl->loadConfiguration(GlobalAttributes::SQL_HIGHLIGHT_CONF_PATH);
+	sql_hl=new SyntaxHighlighter(edt, false);
+	sql_hl->loadConfiguration(GlobalAttributes::getSQLHighlightConfPath());
 
-  layout->addWidget(edt);
-  dlg->exec();
+	layout->addWidget(edt);
+	dlg->exec();
 }
 
 QTEST_MAIN(SyntaxHighlighterTest)

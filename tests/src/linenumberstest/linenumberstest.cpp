@@ -1,7 +1,7 @@
 /*
 # PostgreSQL Database Modeler (pgModeler)
 #
-# Copyright 2006-2018 - Raphael Araújo e Silva <raphael@pgmodeler.io>
+# Copyright 2006-2023 - Raphael Araújo e Silva <raphael@pgmodeler.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 */
 
 #include <QtTest/QtTest>
-#include "numberedtexteditor.h"
+#include "widgets/numberedtexteditor.h"
 #include <QHBoxLayout>
 #include <QDialog>
 
@@ -26,10 +26,10 @@ class LineNumbersTest: public QObject {
     Q_OBJECT
 
   private slots:
-		void handleLineSelectionUsingMouse(void);
+		void handleLineSelectionUsingMouse();
 };
 
-void LineNumbersTest::handleLineSelectionUsingMouse(void)
+void LineNumbersTest::handleLineSelectionUsingMouse()
 {
   QDialog *dlg=new QDialog;
 	NumberedTextEditor *edt=new NumberedTextEditor(dlg);

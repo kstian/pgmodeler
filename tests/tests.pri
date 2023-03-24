@@ -1,37 +1,32 @@
-# tests.pro (reviewed version)
-#
-# Refactored by: Lisandro Damián Nicanor Pérez Meyer <perezmeyer@gmail.com>
-# Refactored code: https://github.com/perezmeyer/pgmodeler/tree/shared_libs
-# Reviewed by: Raphal Araújo e Silva <raphael@pgmodeler.com.br>
-#
-# NOTE: Reviewed code is not a direct merge from refactored version but based upon the
-# refactored code, containing almost all changes done by the refactoring author.
-
 include(../pgmodeler.pri)
 
 TEMPLATE = app
 QT += testlib
 
-unix|win32: LIBS += -L$$OUT_PWD/../../../libpgmodeler_ui/ -lpgmodeler_ui \
-                    -L$$OUT_PWD/../../../libobjrenderer/ -lobjrenderer \
-                    -L$$OUT_PWD/../../../libpgconnector/ -lpgconnector \
-                    -L$$OUT_PWD/../../../libpgmodeler/ -lpgmodeler \
-                    -L$$OUT_PWD/../../../libparsers/ -lparsers \
-                    -L$$OUT_PWD/../../../libutils/ -lutils
+unix|windows: LIBS += $$LIBGUI_LIB \
+		      $$LIBCANVAS_LIB \
+		      $$LIBCONNECTOR_LIB \
+		      $$LIBCORE_LIB \
+		      $$LIBPARSERS_LIB \
+		      $$LIBUTILS_LIB
 
-INCLUDEPATH += $$PWD/../libpgmodeler_ui/src \
-               $$PWD/../libobjrenderer/src \
-               $$PWD/../libpgconnector/src \
-               $$PWD/../libpgmodeler/src \
-               $$PWD/../libparsers/src \
-               $$PWD/../libutils/src
+INCLUDEPATH += $$LIBGUI_INC \
+	       $$LIBCANVAS_INC \
+	       $$LIBCONNECTOR_INC \
+	       $$LIBCORE_INC \
+	       $$LIBPARSERS_INC \
+	       $$LIBUTILS_INC \
+	       $$PWD/src
 
-DEPENDPATH += $$PWD/../libpgmodeler_ui \
-              $$PWD/../libobjrenderer \
-              $$PWD/../libpgconnector \
-              $$PWD/../libpgmodeler \
-              $$PWD/../libparsers \
-              $$PWD/../libutils
+DEPENDPATH += $$LIBGUI_ROOT \
+	      $$LIBCANVAS_ROOT \
+	      $$LIBCONNECTOR_ROOT \
+	      $$LIBCORE_ROOT \
+	      $$LIBPARSERS_ROOT \
+	      $$LIBUTILS_ROOT \
+	      $$PWD/src
+
+HEADERS += $$PWD/src/pgmodelerunittest.h
 
 # Deployment settings
 target.path = $$BINDIR/tests

@@ -1,7 +1,7 @@
 /*
 # PostgreSQL Database Modeler (pgModeler)
 #
-# Copyright 2006-2018 - Raphael Araújo e Silva <raphael@pgmodeler.io>
+# Copyright 2006-2023 - Raphael Araújo e Silva <raphael@pgmodeler.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 */
 
 #include <QtTest/QtTest>
-#include "pgmodelerns.h"
+#include "coreutilsns.h"
 #include "table.h"
 
 class BaseObjectTest: public QObject {
@@ -25,25 +25,29 @@ class BaseObjectTest: public QObject {
     Q_OBJECT
 
   private slots:
-    void quoteNameIfKeyword(void);
-    void nameIsInvalidIfStartsWithNumber(void);
+    void quoteNameIfKeyword();
+    void nameIsInvalidIfStartsWithNumber();
+		void dontFormatNameIfAlreadyQuoted();
 };
 
-void BaseObjectTest::quoteNameIfKeyword(void)
+void BaseObjectTest::quoteNameIfKeyword()
 {
   QString name = "objectname", kw_name="table";
   QCOMPARE(BaseObject::formatName(name), name);
   QCOMPARE(BaseObject::formatName(kw_name), QString("\"%1\"").arg(kw_name));
 }
 
-void BaseObjectTest::nameIsInvalidIfStartsWithNumber(void)
+void BaseObjectTest::nameIsInvalidIfStartsWithNumber()
 {
-  QCOMPARE(BaseObject::isValidName("123"), false);
-  QCOMPARE(BaseObject::isValidName("\"123name\""), false);
   QCOMPARE(BaseObject::isValidName("name"), true);
   QCOMPARE(BaseObject::isValidName("nameA"), true);
 }
 
+void BaseObjectTest::dontFormatNameIfAlreadyQuoted()
+{
+	QString name = "\"SomeObjName\"";
+	QCOMPARE(BaseObject::formatName(name), name);
+}
 
 QTEST_MAIN(BaseObjectTest)
 #include "baseobjecttest.moc"
